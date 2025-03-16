@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>regisseur </title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Light Show</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #111;
+      color: white;
+    }
+
+    .scene {
+      width: 300px;
+      height: 200px;
+      margin: 20px auto;
+      background-color: black;
+      border: 5px solid white;
+      transition: background-color 0.7s ease, filter 0.4s ease;
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+    }
+
+    .controls button {
+      margin: 6px;
+      padding: 10px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #444;
+      color: white;
+    }
+
+    .controls button:hover {
+      background-color: #666;
+    }
+
+    #instruction, #intensityLabel, #timer, #countdown {
+      font-size: 18px;
+      margin: 10px;
+    }
+
+    #score, #combo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .flash {
+      animation: flashEffect 0.3s ease-in-out 4;
+    }
+
+    @keyframes flashEffect {
+      0%, 100% { background-color: white; }
+      50% { background-color: black; }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎛️ Ultimate Light Show</h1>
+  <p>Fais briller la scène et enchaîne les combos !</p>
+
+  <div class="scene" id="scene"></div>
+
+  <div id="countdown">Clique sur Démarrer pour jouer !</div>
+  <p id="instruction" class="hidden">Instruction : ...</p>
+  <p id="intensityLabel" class="hidden">Intensité : <span id="intensityValue">Moyenne</span></p>
+  <p id="combo" class="hidden">Combo : 0</p>
+  <p id="timer" class="hidden">Temps restant : 60s</p>
+  <p class="hidden">Score : <span id="score">0</span></p>
+
+  <div class="controls hidden" id="controls-color">
+    <button onclick="changeLight('red')">Rouge</button>
+    <button onclick="changeLight('blue')">Bleu</button>
+    <button onclick="changeLight('green')">Vert</button>
+    <button onclick="changeLight('yellow')">Jaune</button>
+    <button onclick="triggerFlash()">💥 Flash</button>
+  </div>
+
+  <div class="controls hidden" id="controls-intensity">
+    <button onclick="setIntensity('low')">Intensité Faible</button>
+    <button onclick="setIntensity('medium')">Intensité Moyenne</button>
+    <button onclick="setIntensity('high')">Intensité Forte</button>
+  </div>
+
+  <button id="startBtn">▶️ Démarrer le Show</button>
+
+  <audio id="music" src="https://d1xg8aht389zfw.cloudfront.net/songs/test/153802.mp3" loop></audio>
+
+  <script>
+    let score = 0;
+    let combo = 0;
+    let currentInstruction = "";
+    let timeLeft = 60;
+    let currentIntensity = "medium";
+    let instructionInterval;
+    let timerInterval;
+    let difficultyLevel = 1;
+
+    const colors = ["red", "blue", "green", "yellow"];
+    const scene = document.getElementById("scene");
+    const instructionText = document.getElementById("instruction");
+    const scoreText = document.getElementById("score");
+    const intensityLabel = document.getElementById("intensityValue");
+    const timerDisplay = document.getElementById("timer");
+    const comboText = document.getElementById("combo");
+    const countdownText = document.getElementById("countdown");
+    const music = document.getElementById("music");
+
+    function changeLight(color) {
+      scene.style.backgroundColor = color;
+      applyIntensity();
+
+      if (color === currentInstruction) {
+        combo++;
+        score += 10;
+        if (combo >= 3) {
+          score += 10; // bonus combo
+          comboText.textContent = `🔥 Combo x${combo}! Bonus +10`;
+        } else {
+          comboText.textContent = `Combo : ${combo}`;
+        }
+        scoreText.textContent = score;
+        generateInstruction();
+      } else {
+        combo = 0;
+        comboText.textContent = "Combo : 0";
+      }
+    }
+
+    function setIntensity(level) {
+      currentIntensity = level;
+      intensityLabel.textContent =
+        level === "low" ? "Faible" :
+        level === "medium" ? "Moyenne" : "Forte";
+      applyIntensity();
+    }
+
+    function applyIntensity() {
+      let brightness = currentIntensity === "low" ? "0.4" :
+                       currentIntensity === "medium" ? "0.8" : "1.2";
+      scene.style.filter = `brightness(${brightness})`;
+    }
+
+    function triggerFlash() {
+      scene.classList.remove("flash");
+      void scene.offsetWidth;
+      scene.classList.add("flash");
+    }
+
+    function generateInstruction() {
+      currentInstruction = colors[Math.floor(Math.random() * colors.length)];
+      instructionText.textContent = "Utilisez la lumière " + currentInstruction.toUpperCase();
+    }
+
+    function startGame() {
+      // Masquer le bouton de démarrage
+      document.getElementById("startBtn").classList.add("hidden");
+
+      // Compte à rebours 3...2...1...
+      let countdown = 3;
+      countdownText.textContent = "Le show commence dans : " + countdown;
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown === 0) {
+          clearInterval(countdownInterval);
+          launchGame();
+        } else {
+          countdownText.textContent = "Le show commence dans : " + countdown;
+        }
+      }, 1000);
+    }
+
+    function launchGame() {
+      countdownText.classList.add("hidden");
+      document.querySelectorAll(".hidden").forEach(e => e.classList.remove("hidden"));
+      music.play();
+
+      generateInstruction();
+
+      instructionInterval = setInterval(() => {
+        generateInstruction();
+        // Augmente la difficulté progressivement (accélère la fréquence des instructions)
+        if (timeLeft <= 45) difficultyLevel = 2;
+        if (timeLeft <= 25) difficultyLevel = 3;
+        if (difficultyLevel === 2) clearInterval(instructionInterval), instructionInterval = setInterval(generateInstruction, 4000);
+        if (difficultyLevel === 3) clearInterval(instructionInterval), instructionInterval = setInterval(generateInstruction, 3000);
+      }, 5000);
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Temps restant : ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          clearInterval(instructionInterval);
+          clearInterval(timerInterval);
+          instructionText.textContent = "🎉 Fin du show !";
+          alert("Temps écoulé ! Score final : " + score);
+          music.pause();
+        }
+      }, 1000);
+    }
+
+    document.getElementById("startBtn").addEventListener("click", startGame);
+  </script>
+
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
